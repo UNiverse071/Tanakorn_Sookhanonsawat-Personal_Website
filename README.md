@@ -11,7 +11,7 @@ Each project has its own page at `/projects/<slug>`.
 
 ## Editing content
 
-- `src/data/projects.ts` — projects (set `repo` to a GitHub URL to show a source link; `null` means "source not published")
+- `src/data/projects.ts` — projects (set `repo` to a GitHub URL to show a source link; `null` marks the project as private)
 - `src/data/profile.ts` — contact info, experience, education, honors, skills
 - `src/components/game/world.ts` — where each object sits in the game map
 

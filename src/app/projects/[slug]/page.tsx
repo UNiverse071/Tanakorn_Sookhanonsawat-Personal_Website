@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PROFILE } from "@/data/profile";
-import { PROJECTS, getProject } from "@/data/projects";
+import { PRIVATE_NOTE, PROJECTS, getProject } from "@/data/projects";
 import { ArrowIcon, GitHubIcon, MailIcon } from "@/components/icons";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
@@ -107,9 +107,12 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
               </>
             ) : (
               <>
+                <p className="mt-3 inline-block rounded-md bg-surface-2 px-2.5 py-1 text-xs font-semibold">
+                  🔒 Private
+                </p>
                 <p className="mt-3 text-sm leading-6 text-muted">
-                  The source code for this project isn&apos;t published. I&apos;m happy to walk
-                  through the design and implementation, though.
+                  {PRIVATE_NOTE} I&apos;m happy to walk through the design and implementation,
+                  though.
                 </p>
                 <a
                   href={`mailto:${PROFILE.email}?subject=${encodeURIComponent(project.title)}`}

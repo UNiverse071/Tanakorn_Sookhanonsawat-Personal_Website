@@ -44,7 +44,7 @@ export default function ProjectCard({ project }: { project: Project }) {
 
         <div className="mt-auto flex items-center justify-between pt-1 text-xs">
           <span className={project.repo ? "text-emerald-600 dark:text-emerald-400" : "text-muted"}>
-            {project.repo ? "● Source on GitHub" : "○ Source not published"}
+            {project.repo ? "● Source on GitHub" : "🔒 Private source"}
           </span>
           <span className="flex items-center gap-1 font-medium text-brand">
             Details

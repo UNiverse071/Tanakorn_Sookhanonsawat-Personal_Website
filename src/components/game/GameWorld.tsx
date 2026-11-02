@@ -3,30 +3,24 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { setViewMode } from "@/lib/view-mode";
-import {
-  drawArrow,
-  drawBackground,
-  drawLights,
-  drawNpc,
-  drawPlant,
-  drawPlayer,
-  drawStation,
-  type Dir,
-} from "./draw";
+import { createAmbient } from "./ambient";
+import { drawArrow, drawBackground, drawPlant, drawStation } from "./draw";
 import { panelFor } from "./panels";
+import { LOOKS, drawPerson, drawSlime, makeSprites, type Sprites } from "./people";
 import {
   H,
-  NPCS,
   PLANTS,
   SOLIDS,
   SPAWN,
   STATIONS,
   W,
+  WALL_BOTTOM,
   inReach,
   overlaps,
+  type Dir,
 } from "./world";
 
-const SPEED = 64; // logical px per second
+const SPEED = 96; // logical px per second
 
 const MOVE_KEYS: Record<string, [number, number]> = {
   ArrowLeft: [-1, 0],
@@ -39,13 +33,15 @@ const MOVE_KEYS: Record<string, [number, number]> = {
   KeyS: [0, 1],
 };
 const ACTION_KEYS = new Set(["KeyE", "Enter", "Space"]);
+const FACING: Record<Dir, [number, number]> = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
 
 type Player = { x: number; y: number; dir: Dir; moving: boolean; walk: number };
+type Pet = { x: number; y: number; moving: boolean };
 
 function tryMove(p: Player, dx: number, dy: number) {
-  const nx = Math.min(W - 12, Math.max(12, p.x + dx));
-  const ny = Math.min(206, Math.max(30, p.y + dy));
-  const feet = { x: nx - 4, y: ny - 4, w: 8, h: 4 };
+  const nx = Math.min(W - 24, Math.max(24, p.x + dx));
+  const ny = Math.min(302, Math.max(WALL_BOTTOM + 4, p.y + dy));
+  const feet = { x: nx - 5, y: ny - 5, w: 10, h: 5 };
   if (!SOLIDS.some((s) => overlaps(feet, s))) {
     p.x = nx;
     p.y = ny;
@@ -60,6 +56,8 @@ const DPAD: { code: string; label: string; cls: string }[] = [
 ];
 const DPAD_ARROW: Record<string, string> = { ArrowUp: "▲", ArrowLeft: "◀", ArrowRight: "▶", ArrowDown: "▼" };
 
+const pct = (v: number, total: number) => `${(v / total) * 100}%`;
+
 export default function GameWorld() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -67,6 +65,7 @@ export default function GameWorld() {
 
   const keys = useRef(new Set<string>());
   const player = useRef<Player>({ x: SPAWN.x, y: SPAWN.y, dir: "up", moving: false, walk: 0 });
+  const pet = useRef<Pet>({ x: SPAWN.x - 16, y: SPAWN.y + 6, moving: false });
   const openRef = useRef<string | null>(null);
   const nearRef = useRef<string | null>(null);
 
@@ -109,6 +108,14 @@ export default function GameWorld() {
     if (!bgCtx) return;
     drawBackground(bgCtx);
 
+    // Pre-render every character pose once; drawing them is then just a blit.
+    const heroSprites = makeSprites(LOOKS.hero);
+    const npcSprites: Record<string, Sprites> = {};
+    for (const s of STATIONS) {
+      if (s.look && !npcSprites[s.look]) npcSprites[s.look] = makeSprites(LOOKS[s.look]);
+    }
+    const ambient = createAmbient(new Date().getHours());
+
     let raf = 0;
     let last = performance.now();
     let time = 0;
@@ -134,6 +141,23 @@ export default function GameWorld() {
         p.walk += dt;
       }
 
+      // The slime trails a little behind whichever way you're facing.
+      const pt = pet.current;
+      const [fx, fy] = FACING[p.dir];
+      const tx = p.x - fx * 18;
+      const ty = Math.max(WALL_BOTTOM + 8, p.y - fy * 10 + 2);
+      const ddx = tx - pt.x;
+      const ddy = ty - pt.y;
+      const dist = Math.hypot(ddx, ddy);
+      pt.moving = dist > 4;
+      if (dist > 2) {
+        const step = Math.min(dist, Math.min(dist * 3, 110) * dt);
+        pt.x += (ddx / dist) * step;
+        pt.y += (ddy / dist) * step;
+      }
+
+      ambient.update(dt, p);
+
       let best: string | null = null;
       let bestDist = Infinity;
       for (const s of STATIONS) {
@@ -152,29 +176,46 @@ export default function GameWorld() {
 
     const render = () => {
       const p = player.current;
+      const pt = pet.current;
       ctx.drawImage(bg, 0, 0);
+      ambient.drawWindows(ctx, time);
 
       const portal = STATIONS.find((s) => s.kind === "portal");
       if (portal) drawStation(ctx, portal, time);
+      ambient.drawPuffs(ctx);
 
       const items: { y: number; draw: () => void }[] = [];
-      for (const s of STATIONS) {
-        if (s.kind !== "portal") items.push({ y: s.y, draw: () => drawStation(ctx, s, time) });
-      }
-      for (const pl of PLANTS) items.push({ y: pl.y, draw: () => drawPlant(ctx, pl.x, pl.y) });
-      for (const n of NPCS) items.push({ y: n.y, draw: () => drawNpc(ctx, n.x, n.y, n.color, time, n.phase) });
-      items.push({ y: p.y, draw: () => drawPlayer(ctx, p.x, p.y, p.dir, p.moving, p.walk) });
+      STATIONS.forEach((s, i) => {
+        if (s.kind === "portal") return;
+        if (s.kind === "npc" && s.look && s.dir) {
+          const sp = npcSprites[s.look];
+          const dir = s.dir;
+          items.push({ y: s.y, draw: () => drawPerson(ctx, sp, s.x, s.y, dir, false, 0, time, i * 1.3) });
+        } else {
+          items.push({ y: s.y, draw: () => drawStation(ctx, s, time) });
+        }
+      });
+      for (const pl of PLANTS) items.push({ y: pl.y, draw: () => drawPlant(ctx, pl.x, pl.y, time) });
+      items.push({ y: pt.y, draw: () => drawSlime(ctx, pt.x, pt.y, time, pt.moving) });
+      items.push({
+        y: p.y,
+        draw: () => drawPerson(ctx, heroSprites, p.x, p.y, p.dir, p.moving, p.walk, time),
+      });
       items.sort((a, b) => a.y - b.y);
       for (const it of items) it.draw();
 
       const target = STATIONS.find((s) => s.id === nearRef.current);
-      if (target) drawArrow(ctx, target.x, target.y - (target.kind === "portal" ? 22 : 38), time);
+      if (target) {
+        const lift = target.kind === "npc" ? 46 : target.kind === "portal" ? 34 : 66;
+        drawArrow(ctx, target.x, target.y - lift, time);
+      }
 
-      drawLights(ctx, time);
+      ambient.drawLights(ctx, time);
     };
 
     const frame = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
+      // rAF's timestamp can precede `last` on the very first frame, so clamp at 0.
+      const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
       last = now;
       time += dt;
       if (!openRef.current) update(dt);
@@ -190,7 +231,7 @@ export default function GameWorld() {
         return;
       }
       const target = e.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
 
       if (MOVE_KEYS[e.code]) {
         if (!openRef.current) {
@@ -201,7 +242,7 @@ export default function GameWorld() {
       }
       if (ACTION_KEYS.has(e.code)) {
         // Let Enter/Space activate a focused button or link as usual.
-        if (e.code !== "KeyE" && target?.closest("button, a")) return;
+        if (e.code !== "KeyE" && target?.closest?.("button, a")) return;
         if (openRef.current || !nearRef.current) return;
         e.preventDefault();
         activate(nearRef.current);
@@ -237,7 +278,7 @@ export default function GameWorld() {
           Move with the <kbd className="rounded border border-line bg-surface-2 px-1">arrow keys</kbd> or{" "}
           <kbd className="rounded border border-line bg-surface-2 px-1">WASD</kbd>. Stand next to an object and
           press <kbd className="rounded border border-line bg-surface-2 px-1">E</kbd> to open it — or just click
-          its name. Each object is one of my projects.
+          its name. Each object is one of my projects; the villagers have stories about my experience.
         </p>
       </div>
 
@@ -250,29 +291,62 @@ export default function GameWorld() {
           width={W}
           height={H}
           role="img"
-          aria-label="A pixel-art home base. Walk the knight up to an object to open one of Tanakorn's projects."
+          aria-label="A pixel-art wooden hall. Walk the hoodie-wearing hero up to an object to open one of Tanakorn's projects."
           className="pixelated absolute inset-0 h-full w-full"
         />
 
-        {STATIONS.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => activate(s.id)}
-            style={{
-              left: `${(s.x / W) * 100}%`,
-              top: `${((s.y + 3) / H) * 100}%`,
-              fontSize: "clamp(6px, 1cqw, 10px)",
-            }}
-            className={`font-pixel absolute -translate-x-1/2 whitespace-nowrap rounded px-[0.6em] py-[0.4em] leading-none transition-colors ${
-              near === s.id
-                ? "bg-amber-400 text-black"
-                : "bg-black/55 text-amber-100/90 hover:bg-black/80"
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
+        {STATIONS.map((s) => {
+          if (s.kind === "npc") {
+            // Villagers: an invisible hit-area, plus a name tag when you're close.
+            return (
+              <div key={s.id}>
+                <button
+                  type="button"
+                  aria-label={`Talk to ${s.label}`}
+                  title={`Talk to ${s.label}`}
+                  onClick={() => activate(s.id)}
+                  style={{
+                    left: pct(s.x, W),
+                    top: pct(s.y - 40, H),
+                    width: pct(26, W),
+                    height: pct(42, H),
+                  }}
+                  className="absolute -translate-x-1/2 cursor-pointer rounded focus-visible:outline-2 focus-visible:outline-amber-300"
+                />
+                {near === s.id && (
+                  <span
+                    style={{
+                      left: pct(s.x, W),
+                      top: pct(s.y - 58, H),
+                      fontSize: "clamp(6px, 1cqw, 10px)",
+                    }}
+                    className="font-pixel pointer-events-none absolute -translate-x-1/2 whitespace-nowrap rounded bg-amber-400 px-[0.6em] py-[0.4em] leading-none text-black"
+                  >
+                    {s.label}
+                  </span>
+                )}
+              </div>
+            );
+          }
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => activate(s.id)}
+              style={{
+                left: pct(s.x, W),
+                top: pct(s.y + 4, H),
+                fontSize: "clamp(6px, 1cqw, 10px)",
+                color: near === s.id ? undefined : s.rarity,
+              }}
+              className={`font-pixel absolute -translate-x-1/2 whitespace-nowrap rounded px-[0.6em] py-[0.4em] leading-none transition-colors ${
+                near === s.id ? "bg-amber-400 text-black" : "bg-black/60 hover:bg-black/85"
+              }`}
+            >
+              {s.label}
+            </button>
+          );
+        })}
 
         {/* On-screen controls for touch devices */}
         <div className="absolute bottom-2 left-2 hidden touch-none grid-cols-3 grid-rows-3 gap-1 [@media(pointer:coarse)]:grid">
@@ -378,8 +452,10 @@ export default function GameWorld() {
         {nearStation
           ? nearStation.id === "portal"
             ? "Press E to return to the dashboard view."
-            : `Press E to open “${nearStation.label}”.`
-          : "Walk up to an object to interact with it."}
+            : nearStation.kind === "npc"
+              ? `Press E to talk to the ${nearStation.label}.`
+              : `Press E to open “${nearStation.label}”.`
+          : "Walk up to an object or villager to interact with it."}
       </p>
     </main>
   );

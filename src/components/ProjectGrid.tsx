@@ -15,7 +15,10 @@ export default function ProjectGrid() {
           <h2 id="projects-heading" className="text-2xl font-bold tracking-tight">
             Projects
           </h2>
-          <p className="mt-1 text-sm text-muted">Click a card to see the full details.</p>
+          <p className="mt-1 text-sm text-muted">
+            Click a card to see the full details. 🔒 Private projects are school work — I&apos;m not
+            allowed to publish their source code.
+          </p>
         </div>
         <div role="group" aria-label="Filter projects" className="flex flex-wrap gap-1.5">
           {(["All", ...CATEGORIES] as const).map((c) => (

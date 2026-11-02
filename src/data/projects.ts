@@ -2,6 +2,10 @@ export type Category = "Systems" | "AI / ML" | "Web & Tools";
 
 export const CATEGORIES: Category[] = ["Systems", "AI / ML", "Web & Tools"];
 
+/** Shown wherever a project has no public repository. */
+export const PRIVATE_NOTE =
+  "My school doesn't allow me to publish the source code for this project, so it stays private.";
+
 export type Project = {
   slug: string;
   title: string;
@@ -12,7 +16,7 @@ export type Project = {
   tech: string[];
   overview: string;
   highlights: string[];
-  /** GitHub repository, or null when the source code isn't published. */
+  /** GitHub repository, or null when the source code is private. */
   repo: string | null;
   accent: string;
   icon: string;
