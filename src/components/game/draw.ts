@@ -39,6 +39,14 @@ function shadow(c: Ctx, cx: number, by: number, w: number) {
   r(c, cx - w / 2, by - 3, w, 3, "rgba(0,0,0,0.3)");
 }
 
+function line(c: Ctx, x0: number, y0: number, x1: number, y1: number, col: string) {
+  const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+  for (let i = 0; i <= n; i++) {
+    const f = n === 0 ? 0 : i / n;
+    r(c, x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, 1, 1, col);
+  }
+}
+
 function rng(seed: number) {
   let a = seed;
   return () => {
@@ -574,6 +582,34 @@ const DRAW: Record<Station["kind"], (c: Ctx, cx: number, by: number, t: number) 
       r(c, cx - 8 + i * 5, by - 8 - p * 22, 1, 2, "#d1fae5");
       c.globalAlpha = 1;
     }
+  },
+  // Graph Board — a chalkboard where a minimum spanning tree grows edge by edge.
+  research(c, cx, by, t) {
+    shadow(c, cx, by, 40);
+    r(c, cx - 15, by - 12, 3, 12, OUT);
+    r(c, cx + 12, by - 12, 3, 12, OUT);
+    r(c, cx - 14, by - 11, 1, 11, "#6b2f0a");
+    r(c, cx + 13, by - 11, 1, 11, "#6b2f0a");
+    box(c, cx - 18, by - 42, 36, 32, "#92400e", "#c2762a", "#6b2f0a");
+    r(c, cx - 15, by - 39, 30, 26, "#1e293b");
+    r(c, cx - 15, by - 39, 30, 1, "#334155");
+    const nodes: [number, number][] = [[-10, -33], [0, -36], [10, -31], [-6, -21], [8, -20]];
+    const edges: [number, number][] = [[0, 1], [1, 2], [0, 3], [1, 3], [2, 4], [3, 4], [1, 4]];
+    const mst: [number, number][] = [[0, 1], [0, 3], [3, 4], [2, 4]];
+    const lit = Math.floor((t * 1.1) % 6);
+    for (const [a, b] of edges) {
+      line(c, cx + nodes[a][0], by + nodes[a][1], cx + nodes[b][0], by + nodes[b][1], "#475569");
+    }
+    mst.forEach(([a, b], i) => {
+      if (i < lit) line(c, cx + nodes[a][0], by + nodes[a][1], cx + nodes[b][0], by + nodes[b][1], "#4ade80");
+    });
+    for (const [nx, ny] of nodes) {
+      r(c, cx + nx - 2, by + ny - 2, 5, 5, OUT);
+      r(c, cx + nx - 1, by + ny - 1, 3, 3, "#fbbf24");
+    }
+    r(c, cx - 14, by - 12, 28, 2, "#6b2f0a");
+    r(c, cx - 9, by - 14, 5, 2, "#f8fafc");
+    r(c, cx + 2, by - 14, 4, 2, "#fde68a");
   },
   // Villagers are drawn by drawPerson, not here.
   npc() {},

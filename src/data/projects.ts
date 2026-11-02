@@ -1,6 +1,6 @@
-export type Category = "Systems" | "AI / ML" | "Web & Tools";
+export type Category = "Systems" | "AI / ML" | "Web & Tools" | "Research";
 
-export const CATEGORIES: Category[] = ["Systems", "AI / ML", "Web & Tools"];
+export const CATEGORIES: Category[] = ["Systems", "AI / ML", "Web & Tools", "Research"];
 
 /** Shown wherever a project has no public repository. */
 export const PRIVATE_NOTE =
@@ -18,6 +18,8 @@ export type Project = {
   highlights: string[];
   /** GitHub repository, or null when the source code is private. */
   repo: string | null;
+  /** A research project presented at a competition, rather than a code project. */
+  researchOnly?: boolean;
   accent: string;
   icon: string;
 };
@@ -144,6 +146,25 @@ export const PROJECTS: Project[] = [
     repo: null,
     accent: "#ca8a04",
     icon: "🛠️",
+  },
+  {
+    slug: "prim-vs-kruskal",
+    title: "Prim vs. Kruskal on Dense and Sparse Graphs",
+    tagline: "Silver-medal research on minimum-spanning-tree efficiency",
+    category: "Research",
+    period: "2023",
+    context: "Regional research competition, Southern Thailand",
+    tech: ["Graph algorithms", "Prim's algorithm", "Kruskal's algorithm"],
+    overview:
+      "A research project on the difference in efficiency between Prim's algorithm and Kruskal's algorithm for finding minimum spanning trees, depending on whether the graph is dense or sparse.",
+    highlights: [
+      "Studied how graph density changes which of the two minimum-spanning-tree algorithms is more efficient.",
+      "Presented the project at a computer research project competition in Southern Thailand and won the silver medal.",
+    ],
+    repo: null,
+    researchOnly: true,
+    accent: "#65a30d",
+    icon: "📈",
   },
   {
     slug: "focus-ledger",

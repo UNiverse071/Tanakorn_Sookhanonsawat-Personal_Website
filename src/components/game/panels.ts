@@ -1,4 +1,4 @@
-import { EDUCATION, EXPERIENCE, HONORS, PROFILE } from "@/data/profile";
+import { COMMUNITY, EDUCATION, EXPERIENCE, HOBBIES, HONORS, PROFILE } from "@/data/profile";
 import { PRIVATE_NOTE, getProject } from "@/data/projects";
 import type { Station } from "./world";
 
@@ -68,6 +68,18 @@ const VILLAGERS: Record<string, Panel> = {
     body: HONORS.map((h) => `${h.year} · ${h.title} (${h.org})`),
     links: [],
   },
+  "npc-volunteer": {
+    title: "Volunteer",
+    meta: "Volunteering & Leadership",
+    body: COMMUNITY.map((c) => `${c.title} — ${c.where}${c.period ? ` (${c.period})` : ""}`),
+    links: [],
+  },
+  "npc-bard": {
+    title: "Bard",
+    meta: "Beyond the code",
+    body: HOBBIES.map((h) => `${h.label}: ${h.items.join(", ")}`),
+    links: [],
+  },
   "npc-hacker": {
     title: "Hacker",
     meta: "🔒 About the private projects",
@@ -91,7 +103,14 @@ export function panelFor(s: Station): Panel {
         title: p.title,
         meta: [p.category, p.period, p.context].filter(Boolean).join(" · "),
         tags: p.tech,
-        body: [p.overview, ...(p.repo ? [] : [`🔒 ${PRIVATE_NOTE}`])],
+        body: [
+          p.overview,
+          ...(p.repo
+            ? []
+            : p.researchOnly
+              ? ["📄 A research project presented at a competition — ask me about it."]
+              : [`🔒 ${PRIVATE_NOTE}`]),
+        ],
         links,
       };
     }

@@ -15,6 +15,7 @@ export type StationKind =
   | "crawler"
   | "gan"
   | "motion"
+  | "research"
   | "focus"
   | "codetest"
   | "grader"
@@ -64,8 +65,9 @@ export const STATIONS: Station[] = [
   { id: "allocator", kind: "allocator", x: 328, y: TOP_BASE, w: 42, label: "Allocator", slug: "shared-heap-allocator", accent: "#059669", rarity: SYSTEMS, solid: true },
   { id: "crawler", kind: "crawler", x: 406, y: TOP_BASE, w: 36, label: "Crawler", slug: "web-crawler", accent: "#ea580c", rarity: WEB, solid: true },
   // Left wall: AI / ML
-  { id: "gan", kind: "gan", x: 44, y: 174, w: 34, label: "GANs", slug: "gans", accent: "#db2777", rarity: ML, solid: true },
-  { id: "motion", kind: "motion", x: 44, y: 240, w: 26, label: "Motion AE", slug: "motion-autoencoder", accent: "#0891b2", rarity: ML, solid: true },
+  { id: "gan", kind: "gan", x: 44, y: 170, w: 34, label: "GANs", slug: "gans", accent: "#db2777", rarity: ML, solid: true },
+  { id: "motion", kind: "motion", x: 44, y: 234, w: 26, label: "Motion AE", slug: "motion-autoencoder", accent: "#0891b2", rarity: ML, solid: true },
+  { id: "research", kind: "research", x: 44, y: 294, w: 34, label: "Graph Lab", slug: "prim-vs-kruskal", accent: "#65a30d", rarity: "#b6f26b", solid: true },
   // Right wall: web & tools
   { id: "focus", kind: "focus", x: 444, y: 148, w: 26, label: "Focus Ledger", slug: "focus-ledger", accent: "#dc2626", rarity: WEB, solid: true },
   { id: "codetest", kind: "codetest", x: 444, y: 214, w: 30, label: "Code Test", slug: "coding-test-platform", accent: "#4f46e5", rarity: WEB, solid: true },
@@ -85,6 +87,8 @@ export const STATIONS: Station[] = [
   { id: "npc-scholar", kind: "npc", x: 292, y: 238, w: 12, fh: 6, label: "Scholar", accent: "#a855f7", rarity: "#e5e7eb", solid: true, look: "scholar", dir: "left" },
   { id: "npc-champion", kind: "npc", x: 140, y: 262, w: 12, fh: 6, label: "Champion", accent: "#eab308", rarity: "#e5e7eb", solid: true, look: "champion", dir: "down" },
   { id: "npc-hacker", kind: "npc", x: 344, y: 258, w: 12, fh: 6, label: "Hacker", accent: "#64748b", rarity: "#e5e7eb", solid: true, look: "hacker", dir: "left" },
+  { id: "npc-volunteer", kind: "npc", x: 112, y: 212, w: 12, fh: 6, label: "Volunteer", accent: "#ef4444", rarity: "#e5e7eb", solid: true, look: "volunteer", dir: "right" },
+  { id: "npc-bard", kind: "npc", x: 368, y: 198, w: 12, fh: 6, label: "Bard", accent: "#ca8a04", rarity: "#e5e7eb", solid: true, look: "bard", dir: "left" },
 ];
 
 export const FOOT_H = 12;
@@ -95,7 +99,7 @@ export function footprint(s: Station): Rect {
 }
 
 export const PLANTS = [
-  { x: 36, y: 298 },
+  { x: 142, y: 298 },
   { x: 336, y: 298 },
 ];
 

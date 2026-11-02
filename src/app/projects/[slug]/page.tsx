@@ -91,8 +91,24 @@ export default async function ProjectPage(props: PageProps<"/projects/[slug]">) 
           </div>
 
           <aside className="h-fit rounded-xl border border-line bg-surface p-5">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-muted">Source code</h2>
-            {project.repo ? (
+            <h2 className="text-sm font-bold uppercase tracking-widest text-muted">
+              {project.researchOnly ? "Research project" : "Source code"}
+            </h2>
+            {project.researchOnly ? (
+              <>
+                <p className="mt-3 text-sm leading-6 text-muted">
+                  📄 This is a research project that I presented at a competition. Ask me about the
+                  methods and results.
+                </p>
+                <a
+                  href={`mailto:${PROFILE.email}?subject=${encodeURIComponent(project.title)}`}
+                  className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-line bg-surface-2 px-4 py-2.5 text-sm font-semibold transition-colors hover:border-brand hover:text-brand"
+                >
+                  <MailIcon className="size-4" />
+                  Ask me about it
+                </a>
+              </>
+            ) : project.repo ? (
               <>
                 <a
                   href={project.repo}

@@ -46,6 +46,8 @@ export const LOOKS: Record<string, Look> = {
   coach: { hair: "#7c2d12", hairHi: "#9a3412", skin: "#e8b98e", skinSh: "#c98f62", top: "#dc2626", topHi: "#f87171", topSh: "#991b1b", pants: "#1f2937", boots: "#111827", hat: "cap", hatColor: "#ef4444" },
   scholar: { hair: "#111827", hairHi: "#374151", ...SKIN, top: "#7c3aed", topHi: "#a78bfa", topSh: "#5b21b6", pants: "#1f2937", boots: "#111827", hat: "grad" },
   champion: { hair: "#fbbf24", hairHi: "#fde68a", ...SKIN, top: "#f8fafc", topHi: "#ffffff", topSh: "#cbd5e1", pants: "#92400e", boots: "#451a03", hat: "crown" },
+  volunteer: { hair: "#4a2c17", hairHi: "#6b4226", ...SKIN, top: "#f8fafc", topHi: "#ffffff", topSh: "#cbd5e1", pants: "#334155", boots: "#1f2937", hat: "cap", hatColor: "#dc2626" },
+  bard: { hair: "#7c2d12", hairHi: "#9a3412", ...SKIN, top: "#0d9488", topHi: "#2dd4bf", topSh: "#0f766e", pants: "#78350f", boots: "#451a03", hat: "cap", hatColor: "#ca8a04" },
   hacker: { hair: "#0f172a", hairHi: "#1e293b", ...SKIN, top: "#334155", topHi: "#64748b", topSh: "#1e293b", pants: "#0f172a", boots: "#020617", hat: "hoodUp" },
 };
 
